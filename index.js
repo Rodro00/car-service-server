@@ -49,7 +49,7 @@ async function run() {
 
     // booking services
     app.get('/booking', async (req,res)=>{
-      console.log(req.query.email);
+      console.log(req.query.email)
       // get data by filtering
       let query = {};
       if(req.query?.email){
