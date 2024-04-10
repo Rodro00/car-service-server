@@ -9,7 +9,7 @@ const port = process.env.PORT || 1000;
 app.use(cors());
 app.use(express.json());
 
-console.log()
+// console.log();
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@car-service.rhyxtaz.mongodb.net/?retryWrites=true&w=majority&appName=car-service`;
 
@@ -51,7 +51,7 @@ async function run() {
     app.get('/booking', async (req,res)=>{
       console.log(req.query.email)
       // get data by filtering
-      let query = {};
+      let query = {}
       if(req.query?.email){
         query = {email: req.query.email};
       }
