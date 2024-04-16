@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookiePurser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
@@ -8,8 +10,7 @@ const port = process.env.PORT || 1000;
 // middleware
 app.use(cors());
 app.use(express.json());
-
-// console.log();
+app.use(cookiePurser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@car-service.rhyxtaz.mongodb.net/?retryWrites=true&w=majority&appName=car-service`;
 
@@ -31,36 +32,53 @@ async function run() {
     const serviceCollection = client.db('carMaintain').collection('services');
     const bookingCollection = client.db('carMaintain').collection('booking');
 
+    // auth related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      console.log('tok tok tok token', req.cookies.token);
+      console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'none'
+        })
+        .send({ success: true });
+    })
+
+
+    // service related api
     //todo: all data load from database
-    app.get('/services', async(req,res)=>{
-        const cursor = serviceCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
+    app.get('/services', async (req, res) => {
+      const cursor = serviceCollection.find();
+      const result = await cursor.toArray()
+      res.send(result);
     })
 
     // todo: specific data load from database
-    app.get('/services/:id', async(req,res)=>{
+    app.get('/services/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await serviceCollection.findOne(query);
       res.send(result)
     })
 
 
     // booking services
-    app.get('/booking', async (req,res)=>{
+    app.get('/booking', async (req, res) => {
       console.log(req.query.email)
       // get data by filtering
       let query = {}
-      if(req.query?.email){
-        query = {email: req.query.email};
+      if (req.query?.email) {
+        query = { email: req.query.email };
       }
       const result = await bookingCollection.find(query).toArray();
       res.send(result)
     })
 
     // send data clint side to server side or post method
-    app.post('/booking', async(req,res)=>{
+    app.post('/booking', async (req, res) => {
       const booking = req.body;
       console.log(booking);
       const result = await bookingCollection.insertOne(booking);
@@ -68,9 +86,9 @@ async function run() {
     })
 
     // update method
-    app.patch('/booking/:id', async(req,res)=>{
+    app.patch('/booking/:id', async (req, res) => {
       const id = req.params.id;
-      const filter = {_id: new ObjectId(id)};
+      const filter = { _id: new ObjectId(id) };
       const updateBooking = req.body;
       console.log(updateBooking)
       const updateDoc = {
@@ -78,15 +96,15 @@ async function run() {
           status: updateBooking.status
         }
       }
-      const result = await bookingCollection.updateOne(filter,updateDoc);
+      const result = await bookingCollection.updateOne(filter, updateDoc);
       res.send(result);
 
     })
 
     // delete method
-    app.delete('/booking/:id', async(req,res)=>{
+    app.delete('/booking/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await bookingCollection.deleteOne(query);
       res.send(result)
     })
@@ -105,10 +123,10 @@ async function run() {
 run().catch(console.dir);
 
 
-app.get('/',(req,res)=>{
-    res.send('service is running')
+app.get('/', (req, res) => {
+  res.send('service is running')
 })
 
-app.listen(port, ()=>{
-    console.log(`car doctor is running on port ${port}`)
+app.listen(port, () => {
+  console.log(`car doctor is running on port ${port}`)
 })
