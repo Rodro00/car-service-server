@@ -30,6 +30,7 @@ async function run() {
     await client.connect();
 
     const serviceCollection = client.db('carMaintain').collection('services');
+    const productCollection = client.db('carMaintain').collection('products');
     const bookingCollection = client.db('carMaintain').collection('booking');
 
     // auth related api
@@ -61,6 +62,13 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await serviceCollection.findOne(query);
+      res.send(result)
+    })
+
+    // find product form database
+    app.get('/products', async(req,res)=>{
+      const cursor =productCollection.find();
+      const result = await cursor.toArray();
       res.send(result)
     })
 
